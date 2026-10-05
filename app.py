@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import streamlit as st
 
 from neo4j_service import (
@@ -424,51 +426,146 @@ elif page == "Pet Search":
         "🔎 ค้นหาสัตว์เลี้ยง"
     )
 
-    pet_names = [
-        "Dog",
-        "Cat",
-        "Rabbit",
-        "Bird",
-        "Fish",
-        "Hamster",
-    ]
+    # -----------------------------------------------------
+    # โฟลเดอร์เก็บรูปสัตว์
+    # -----------------------------------------------------
+
+    IMAGE_DIR = Path(__file__).resolve().parent / "pet_images"
+
+    # ถ้าไม่พบโฟลเดอร์ ให้ใช้ตำแหน่งตามเครื่องของคุณ
+    if not IMAGE_DIR.exists():
+
+        IMAGE_DIR = Path(
+            r"D:\Pet_664245029\Pet029\pet_images"
+        )
+
+    # -----------------------------------------------------
+    # รายชื่อสัตว์และชื่อไฟล์รูป
+    # -----------------------------------------------------
+
+    pet_data = {
+        "Dog": "dog",
+        "Cat": "cat",
+        "Rabbit": "rabbit",
+        "Bird": "bird",
+        "Fish": "fish",
+        "Hamster": "hamster",
+    }
+
+    # -----------------------------------------------------
+    # ฟังก์ชันค้นหารูป
+    # -----------------------------------------------------
+
+    def find_pet_image(filename: str):
+
+        extensions = [
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".webp",
+            ".JPG",
+            ".JPEG",
+            ".PNG",
+            ".WEBP",
+        ]
+
+        for ext in extensions:
+
+            image_path = IMAGE_DIR / f"{filename}{ext}"
+
+            if image_path.exists():
+                return image_path
+
+        return None
+
+    # -----------------------------------------------------
+    # ช่องค้นหา
+    # -----------------------------------------------------
 
     keyword = st.text_input(
         "ชื่อสัตว์เลี้ยง",
         placeholder="เช่น Cat, Dog, Rabbit"
     )
 
+    # -----------------------------------------------------
+    # ค้นหา
+    # -----------------------------------------------------
+
     if keyword:
 
         results = [
             pet
-            for pet in pet_names
-            if keyword.lower()
-            in pet.lower()
+            for pet in pet_data.keys()
+            if keyword.lower() in pet.lower()
         ]
 
     else:
 
-        results = pet_names
+        results = list(
+            pet_data.keys()
+        )
+
+    # -----------------------------------------------------
+    # จำนวนผลลัพธ์
+    # -----------------------------------------------------
 
     st.write(
         f"พบ {len(results)} รายการ"
     )
 
+    # -----------------------------------------------------
+    # แสดงรูปและข้อมูลสัตว์
+    # -----------------------------------------------------
+
     for pet in results:
 
+        image_path = find_pet_image(
+            pet_data[pet]
+        )
+
         st.markdown(
-            f"""
+            """
             <div class="pet-card">
+            """,
+            unsafe_allow_html=True,
+        )
 
-              <h3>
-                🐾 {pet}
-              </h3>
+        col1, col2 = st.columns(
+            [1, 4]
+        )
 
-              <div class="muted">
-                Pet
-              </div>
+        with col1:
 
+            if image_path:
+
+                st.image(
+                    str(image_path),
+                    width=150
+                )
+
+            else:
+
+                st.warning(
+                    "ไม่พบรูป"
+                )
+
+        with col2:
+
+            st.markdown(
+                f"""
+                <h2 style="margin-top:10px;">
+                    🐾 {pet}
+                </h2>
+
+                <div class="muted">
+                    Pet
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        st.markdown(
+            """
             </div>
             """,
             unsafe_allow_html=True,
